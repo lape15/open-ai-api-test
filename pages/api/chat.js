@@ -15,6 +15,7 @@ export const getUserChats = async (uid) => {
     let localDocs = {};
     docs.forEach((doc) => {
       localDocs = doc.data();
+      console.log("test");
       localDocs.id = doc.id;
       chats.push(localDocs);
     });
