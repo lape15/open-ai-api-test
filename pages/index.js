@@ -1,10 +1,15 @@
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import styles from "./index.module.css";
+import { signInWithGoogle } from "./api/auth/firebase";
 
-export default function Home() {
+export default function Home(props) {
+  const { user, setUser } = props;
   const [animalInput, setAnimalInput] = useState("");
   const [result, setResult] = useState();
+
+  const router = useRouter();
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -19,39 +24,47 @@ export default function Home() {
 
       const data = await response.json();
       if (response.status !== 200) {
-        throw data.error || new Error(`Request failed with status ${response.status}`);
+        throw (
+          data.error ||
+          new Error(`Request failed with status ${response.status}`)
+        );
       }
 
       setResult(data.result);
       setAnimalInput("");
-    } catch(error) {
-      // Consider implementing your own error handling logic here
+    } catch (error) {
       console.error(error);
       alert(error.message);
     }
   }
 
+  const loginInUser = async () => {
+    try {
+      const result = await signInWithGoogle();
+      setUser(result);
+      setUser({
+        name: result.displayName,
+        uid: result.uid,
+        photoUrl: result.reloadUserInfo.photoUrl,
+      });
+      router.push("dashboard");
+    } catch (err) {
+      console.log("EROR authenticating user", err);
+    }
+  };
+
   return (
     <div>
       <Head>
-        <title>OpenAI Quickstart</title>
+        <title>Auth Page</title>
         <link rel="icon" href="/dog.png" />
       </Head>
 
       <main className={styles.main}>
         <img src="/dog.png" className={styles.icon} />
-        <h3>Name my pet</h3>
-        <form onSubmit={onSubmit}>
-          <input
-            type="text"
-            name="animal"
-            placeholder="Enter an animal"
-            value={animalInput}
-            onChange={(e) => setAnimalInput(e.target.value)}
-          />
-          <input type="submit" value="Generate names" />
-        </form>
-        <div className={styles.result}>{result}</div>
+        <h3>Sign in with google</h3>
+
+        <button onClick={loginInUser}>Login with Google</button>
       </main>
     </div>
   );
